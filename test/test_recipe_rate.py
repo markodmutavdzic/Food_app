@@ -1,8 +1,6 @@
 from freezegun import freeze_time
 
 
-
-
 @freeze_time('2021-06-16 07:43:06.284695')
 def test_recipe_rate(client_recipe_rate):
     data = {
