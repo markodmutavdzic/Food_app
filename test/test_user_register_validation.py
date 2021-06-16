@@ -1,20 +1,3 @@
-import pytest
-
-from recipes import app, db
-
-
-@pytest.fixture
-def client_empty_db():
-    app.config["TESTING"] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes_test'
-
-    with app.test_client() as client:
-        db.create_all()
-        db.session.commit()
-        db.session.close()
-        yield client
-        db.session.remove()
-        db.drop_all()
 
 
 def test_user_registration_missing_first_name(client_empty_db):

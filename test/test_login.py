@@ -1,6 +1,6 @@
 import pytest
 
-from recipes import app, db, User
+from recipes import User, app, db
 
 test_user = User(first_name='Marko',
                  last_name='Mutavdzic',
@@ -12,7 +12,6 @@ test_user = User(first_name='Marko',
                  company_name=None,
                  company_sector=None
                  )
-
 
 
 @pytest.fixture
@@ -28,28 +27,9 @@ def client_one_user_db():
         yield client
         db.session.delete(test_user)
         db.session.commit()
-
-@pytest.fixture()
-def patch_jwt(mocker):
-    return mocker.patch(
-        "recipes.jwt.encode", return_value="123"
-    )
-
-@pytest.fixture
-def client_empty_db():
-    app.config["TESTING"] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes_test'
-
-    with app.test_client() as client:
-        db.create_all()
-        db.session.commit()
-        db.session.close()
-        yield client
+        db.make_transient(test_user)
         db.session.remove()
         db.drop_all()
-
-
-
 
 def test_user_login(client_one_user_db, patch_jwt):
     url = '/user_login'
@@ -57,7 +37,6 @@ def test_user_login(client_one_user_db, patch_jwt):
 
     assert response.status_code == 200
     assert response.get_json() == {"token": "123"}
-
 
 def test_user_login_no_auth(client_empty_db):
     url = '/user_login'
@@ -77,8 +56,11 @@ def test_user_login_wrong_username(client_empty_db):
 
 def test_user_login_wrong_password(client_one_user_db):
     url = '/user_login'
-    response = client_one_user_db.get(url, auth=("mare", "test_pass"))
+    response = client_one_user_db.get(url, auth=('mare', "test_pass"))
 
     assert response.status_code == 401
     assert response.get_json() == {'message': 'Invalid password'}
+
+
+
 

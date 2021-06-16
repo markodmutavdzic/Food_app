@@ -62,7 +62,6 @@ def token_required(f):
             token = request.headers['access-token']
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
-
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
 
@@ -197,7 +196,7 @@ def recipe_rate(current_user_id):
     if not recipe:
         return jsonify({"message": "Recipe with that id doesn't exist."}), 400
     if recipe.user_id == current_user_id:
-        return jsonify({"message": "It's not allowed to rate your own recipes"})
+        return jsonify({"message": "It's not allowed to rate your own recipes"}), 400
     if recipe.rating == 0.0:
         rating = rate
     else:
