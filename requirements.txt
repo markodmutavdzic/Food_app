@@ -9,3 +9,5 @@ psycopg2-binary==2.8.6
 pytest==6.2.4
 
 pytest-mock==3.6.1 #mozda
+
+freezegun==1.1.0

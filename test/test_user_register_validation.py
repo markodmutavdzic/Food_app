@@ -16,6 +16,7 @@ def client_empty_db():
         db.session.remove()
         db.drop_all()
 
+
 def test_user_registration_missing_first_name(client_empty_db):
     data = {
 
