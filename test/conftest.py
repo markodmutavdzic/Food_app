@@ -134,6 +134,9 @@ def client_recipe_list_all():
         db.session.commit()
         db.session.close()
         yield client
+        # db.session.rollback()
+        # # db.session.remove()
+
         db.make_transient(test_user)
         db.make_transient(test_recipe)
         db.make_transient(test_recipe_own)

@@ -24,19 +24,19 @@ def test_recipe_list_all(client_recipe_list_all):
                                                 'recipe user id': None}]}
 
 
-# def test_recipe_list_all_max(client_recipe_list_all):
-#     url = 'recipe_list_all?filter=max'
-#
-#     response = client_recipe_list_all.get(url)
-#
-#     assert response.status_code == 200
-#     assert response.get_json() == "123"
-#
-#
-# def test_recipe_list_all_min(client_recipe_list_all):
-#     url = 'recipe_list_all?filter=min'
-#
-#     response = client_recipe_list_all.get(url)
-#
-#     assert response.status_code == 200
-#     assert response.get_json() == "123"
+def test_recipe_list_all_max(client_recipe_list_all):
+    url = 'recipe_list_all?filter=max'
+
+    response = client_recipe_list_all.get(url)
+
+    assert response.status_code == 200
+    assert response.get_json() == "123"
+
+
+def test_recipe_list_all_min(client_recipe_list_all):
+    url = 'recipe_list_all?filter=min'
+
+    response = client_recipe_list_all.get(url)
+
+    assert response.status_code == 200
+    assert response.get_json() == "123"
