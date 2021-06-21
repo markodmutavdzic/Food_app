@@ -22,3 +22,8 @@ Get most used ingredients (Top 5): GET http://127.0.0.1:5000/ingredients_top
 Search recipers: GET http://127.0.0.1:5000/recipe_search
 
 Query parameters: name text ingrediants
+
+
+crontab
+00 23 * * * cd /home/marko/PycharmProjects/Food_app && env/bin/python manage.py update_users_clearbit
+
