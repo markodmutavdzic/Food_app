@@ -89,17 +89,15 @@ def user_registration():
     if not email_verifier(data['email']):
         return jsonify({"message": "Invalid email"}), 400
 
-    user_data = additional_data(data['email'])
-
     new_user = User(first_name=data['first_name'],
                     last_name=data['last_name'],
                     email=data['email'],
                     username=data['username'],
                     password=data['password'],
-                    user_location=user_data['user_location'],
-                    user_title=user_data['user_title'],
-                    company_name=user_data['company_name'],
-                    company_sector=user_data['company_sector'],
+                    user_location="Clear",
+                    user_title=None,
+                    company_name=None,
+                    company_sector=None,
                     )
     db.session.add(new_user)
     db.session.commit()
