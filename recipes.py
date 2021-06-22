@@ -2,13 +2,15 @@ import datetime
 from functools import wraps
 
 import jwt
+
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import ValidationError
+
 from sqlalchemy import desc, asc
 from sqlalchemy.sql.functions import count
 
-from clearbit_info import additional_data
+
 from hunter import email_verifier
 from marsh import user_register_schema, recipe_create_schema, recipe_rate_schema
 
@@ -44,6 +46,8 @@ class Recipe(db.Model):
     text = db.Column(db.Text)
     ingredients = db.Column(db.Text)
     rating = db.Column(db.Float)
+    rating_sum = db.Column(db.Float)
+    rating_count = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     ingredient = db.relationship('Ingredient', secondary=recipe_ingredient,
                                  backref=db.backref('recipe', lazy='dynamic'))
@@ -148,8 +152,10 @@ def recipe_create(current_user_id):
     new_recipe = Recipe(
         name=name,
         text=text,
+        ingredients=str(ingredients),
         rating=0.0,
-        ingredients=ingredients,
+        rating_sum=0,
+        rating_count=0,
         user_id=current_user_id
     )
 
@@ -195,11 +201,11 @@ def recipe_rate(current_user_id):
         return jsonify({"message": "Recipe with that id doesn't exist."}), 400
     if recipe.user_id == current_user_id:
         return jsonify({"message": "It's not allowed to rate your own recipes"}), 400
-    if recipe.rating == 0.0:
-        rating = rate
-    else:
-        rating = (recipe.rating + rate) / 2
-    recipe.rating = round(rating, 2)
+
+    recipe.rating_count = int(recipe.rating_count) + 1
+    recipe.rating_sum = float(recipe.rating_sum) + float(rate)
+    recipe.rating = round(recipe.rating_sum/recipe.rating_count, 2)
+
     db.session.commit()
     db.session.close()
 
@@ -224,18 +230,30 @@ def recipe_response(recipes_db):
 @app.route('/recipe_list_all')
 def recipe_list_all():
     request_query = request.args.get('filter')
+    request_page = request.args.get('page')
+    if request_page:
+        page = int(request_page)
+    else:
+        page = 1
     if not request_query:
-        recipes_db = Recipe.query.order_by(Recipe.id).all()
+        recipes_db = Recipe.query.order_by(Recipe.id).paginate(per_page=2, page=page, error_out=False)
     else:
         recipes_db = (
             db.session.query(Recipe).select_from(Ingredient).join(Ingredient.recipe)
             .group_by(Recipe.id)
-            .order_by(desc(count(Ingredient.id)) if request_query == 'max' else asc(count(Ingredient.id))).all()
+            .order_by(desc(count(Ingredient.id)) if request_query == 'max' else asc(count(Ingredient.id)))
+            .paginate(per_page=2, page=page, error_out=False)
         )
 
-    recipes = recipe_response(recipes_db)
+    if recipes_db.page > recipes_db.pages:
+        return jsonify({"message": "You requested page that don't exist"},
+                       {"current page": recipes_db.page},
+                       {"total pages": recipes_db.pages}), 400
 
-    return jsonify({"recipes": recipes}), 200
+    recipes = recipe_response(recipes_db.items)
+    return jsonify({"current page": recipes_db.page},
+                   {"total pages": recipes_db.pages},
+                   {"recipes": recipes}), 200
 
 
 @app.route('/recipe_list_own')
@@ -257,38 +275,27 @@ def ingredients_top():
     return jsonify({"Top 5 ingredients": top_ingredients}), 200
 
 
-@app.route('/recipe_search')
+@app.route("/recipe_search")
 def recipe_search():
     request_query_name = request.args.get('name')
     request_query_text = request.args.get('text')
     request_query_ingredients = request.args.get('ingredients')
-    recipes_db = Recipe.query.order_by(Recipe.id).all()
-    recipes_list = []
 
     if request_query_name:
-        search = request_query_name.replace(',', ' ').split()
-        for recipe in recipes_db:
-            recipe_name = recipe.name.replace(',', ' ').split()
-            if all(x.lower() in [r.lower() for r in recipe_name] for x in search):
-                recipes_list.append(recipe)
+        recipes_list = Recipe.query.filter(Recipe.name.ilike(f'%{request_query_name}%')).all()
     elif request_query_text:
-        search = request_query_text.replace(',', ' ').split()
-        for recipe in recipes_db:
-            recipe_text = recipe.text.replace(',', ' ').split()
-            if all(x.lower() in [r.lower() for r in recipe_text] for x in search):
-                recipes_list.append(recipe)
+        recipes_list = Recipe.query.filter(Recipe.text.ilike(f'%{request_query_text}%')).all()
     elif request_query_ingredients:
-        search = request_query_ingredients.replace(',', ' ').split()
-        for recipe in recipes_db:
-            recipe_ingredients = recipe.ingredients.replace(',', ' ').replace('{', '').replace('}', '').split()
-            if all(x.lower() in [r.lower() for r in recipe_ingredients] for x in search):
-                recipes_list.append(recipe)
+        recipes_list = Recipe.query.filter(Recipe.text.ilike(f'%{request_query_ingredients}%')).all()
+
     else:
         return jsonify({"message": "Enter search parameter and value"}), 400
 
+    if not recipes_list:
+        return jsonify({"message" : "Recipe with that search parameter doesn't exist "})
     recipes = recipe_response(recipes_list)
     return jsonify({"message": recipes}), 200
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

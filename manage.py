@@ -20,5 +20,7 @@ def update_users_clearbit():
         user.company_sector = user_data['company_sector']
     db.session.commit()
     db.session.close()
+
+
 if __name__ == "__main__":
     manager.run()
