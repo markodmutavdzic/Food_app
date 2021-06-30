@@ -17,7 +17,10 @@ from marsh import user_register_schema, recipe_create_schema, recipe_rate_schema
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'marko'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@postgresdb/Food_recipes'
+
 db = SQLAlchemy(app)
+
 
 
 class User(db.Model):
@@ -108,6 +111,13 @@ def user_registration():
     db.session.close()
 
     return jsonify({"message": "New user created."}), 200
+
+
+@app.route('/')
+def nesto():
+    db.create_all()
+    return "123"
+
 
 
 @app.route('/user_login')
@@ -298,4 +308,5 @@ def recipe_search():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    db.create_all()
+    app.run(port=5000, host="0.0.0.0")
