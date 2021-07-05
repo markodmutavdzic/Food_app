@@ -11,6 +11,8 @@ services:
       - POSTGRES_DB=Food_recipes
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=0147
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
   food-app:
     image: markodmutavdzic/food-app:1.4
@@ -19,3 +21,6 @@ services:
     ports:
       - "5000:5000"
 
+volumes:
+  db-data:
+    driver: local

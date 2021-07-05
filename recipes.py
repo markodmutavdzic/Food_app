@@ -16,8 +16,8 @@ from marsh import user_register_schema, recipe_create_schema, recipe_rate_schema
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'marko'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@postgresdb/Food_recipes'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@postgresdb/Food_recipes'
 
 db = SQLAlchemy(app)
 
@@ -296,7 +296,7 @@ def recipe_search():
     elif request_query_text:
         recipes_list = Recipe.query.filter(Recipe.text.ilike(f'%{request_query_text}%')).all()
     elif request_query_ingredients:
-        recipes_list = Recipe.query.filter(Recipe.text.ilike(f'%{request_query_ingredients}%')).all()
+        recipes_list = Recipe.query.filter(Recipe.ingredients.ilike(f'%{request_query_ingredients}%')).all()
 
     else:
         return jsonify({"message": "Enter search parameter and value"}), 400

@@ -43,7 +43,7 @@ def client_one_user_db():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0147@localhost:5432/Food_recipes_test'
 
     with app.test_client() as client:
-        db.create_all()
+        # db.create_all()
         db.session.add(test_user)
         db.session.commit()
         db.session.close()
@@ -134,9 +134,12 @@ def client_recipe_list_all():
         db.session.commit()
         db.session.close()
         yield client
-        # db.session.rollback()
-        # # db.session.remove()
 
+        db.session.delete(test_user)
+        db.session.delete(test_recipe)
+        db.session.delete(test_recipe_own)
+        db.session.delete(test_recipe_2)
+        db.session.commit()
         db.make_transient(test_user)
         db.make_transient(test_recipe)
         db.make_transient(test_recipe_own)
